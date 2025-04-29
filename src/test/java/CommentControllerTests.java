@@ -3,9 +3,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.isa.demo.dto.CommentDTO;
-import ru.isa.demo.dto.TaskDTO;
 import ru.isa.demo.dto.UserDTO;
-import ru.isa.demo.model.Task;
 import ru.isa.demo.model.User;
 
 import static io.restassured.RestAssured.given;

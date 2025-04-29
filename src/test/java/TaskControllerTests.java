@@ -7,8 +7,6 @@ import ru.isa.demo.dto.UserDTO;
 import ru.isa.demo.model.Task;
 import ru.isa.demo.model.User;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 import static io.restassured.RestAssured.given;
 import static ru.isa.demo.specifications.RespSpec.SIMPLE_OK;
@@ -182,24 +180,21 @@ public class TaskControllerTests {
                 .extract().asString();
 
         Long createdUserId = Long.parseLong(userResponse);
-        // Создание объекта TaskDTO
+
         TaskDTO taskDTO = new TaskDTO(Task.Priority.HIGH, Task.Status.IN_IDLE, "Rest test description", "Rest test title", createdUserId);
         String jsonString = objectMapper.writeValueAsString(taskDTO);
 
-        // Выполнение POST запроса для создания задачи
         String response = given()
                 .spec(requestSpecification())
                 .body(jsonString)
                 .when().log().all()
                 .post("/api/task/create")
                 .then().log().all()
-                .spec(SIMPLE_OK()) // Убедитесь, что задача успешно создана
-                .extract().asString(); // Извлечение ответа как строки
+                .spec(SIMPLE_OK())
+                .extract().asString();
 
-        // Предположим, что ID задачи находится в ответе как текст
-        Integer createdTaskId = Integer.parseInt(response); // Преобразование строки в Integer, если ID возвращается как текст
+        Integer createdTaskId = Integer.parseInt(response);
 
-        // Выполнение DELETE запроса для удаления задачи
         given()
                 .spec(requestSpecification())
                 .when().log().all()

@@ -5,8 +5,6 @@ import ru.isa.demo.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
-import java.nio.charset.StandardCharsets;
-
 import static io.restassured.RestAssured.given;
 import static ru.isa.demo.specifications.RespSpec.SIMPLE_OK;
 import static ru.isa.demo.specifications.RespSpec.requestSpecification;
