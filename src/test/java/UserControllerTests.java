@@ -5,7 +5,6 @@ import ru.isa.demo.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
-
 import java.nio.charset.StandardCharsets;
 
 import static io.restassured.RestAssured.given;
@@ -18,12 +17,32 @@ public class UserControllerTests {
 
     @DisplayName("Get user test")
     @Test
-    void test() {
+    void test() throws JsonProcessingException {
+        UserDTO userDTO = new UserDTO("Test name", "test pass", User.ROLE.ADMIN);
+        String jsonString = objectMapper.writeValueAsString(userDTO);
+
+        String response = given()
+                .spec(requestSpecification())
+                .body(jsonString)
+                .when().log().all()
+                .post("/api/user/create")
+                .then().log().all()
+                .extract().asString();
+
+        Long createUserId = Long.parseLong(response);
+
         given()
                 .spec(requestSpecification())
-                .when().log().all().get("/api/user/getUser/16")
+                .when().log().all().get("/api/user/getUser/{id}", createUserId)
                 .then().log().all()
                 .spec(SIMPLE_OK());
+
+        given()
+                .spec(requestSpecification())
+                .when().log().all()
+                .delete("/api/user/delete/{id}", createUserId)
+                .then().log().all();
+
     }
 
     @DisplayName("Get all users")
@@ -37,14 +56,12 @@ public class UserControllerTests {
     }
 
 
-    @DisplayName("Post and delete user test")
+    @DisplayName("Post user test")
     @Test
     void test3() throws JsonProcessingException {
-        // Создание нового пользователя
         UserDTO userDTO = new UserDTO("Test name", "test pass", User.ROLE.ADMIN);
         String jsonString = objectMapper.writeValueAsString(userDTO);
 
-        // Выполнение POST запроса для создания пользователя
         String response = given()
                 .spec(requestSpecification())
                 .body(jsonString)
@@ -54,34 +71,63 @@ public class UserControllerTests {
                 .spec(SIMPLE_OK())
                 .extract().asString();
 
-        // Извлечение ID созданного пользователя
         Long createUserId = Long.parseLong(response);
 
-        // Выполнение DELETE запроса для удаления пользователя
         given()
                 .spec(requestSpecification())
                 .when().log().all()
                 .delete("/api/user/delete/{id}", createUserId)
-                .then().log().all()
-                .spec(SIMPLE_OK());
+                .then().log().all();
     }
 
     @DisplayName("Update user")
     @Test
     void test4() throws JsonProcessingException {
+        UserDTO userDTO = new UserDTO("Test name", "test pass", User.ROLE.ADMIN);
+        String jsonString = objectMapper.writeValueAsString(userDTO);
+
+        String response = given()
+                .spec(requestSpecification())
+                .body(jsonString)
+                .when().log().all()
+                .post("/api/user/create")
+                .then().log().all()
+                .extract().asString();
+
+        Long createUserId = Long.parseLong(response);
+
         given()
                 .spec(requestSpecification())
-                .when().log().all().put("api/user/updateUser/12?username=ChangedName&password=ChangedPassword&role=USER")
+                .when().log().all().put("api/user/updateUser/{id}?username=ChangedName&password=ChangedPassword&role=USER", createUserId)
                 .then().log().all()
                 .spec(SIMPLE_OK());
+
+        given()
+                .spec(requestSpecification())
+                .when().log().all()
+                .delete("/api/user/delete/{id}", createUserId)
+                .then().log().all();
     }
 
     @DisplayName("Delete user")
     @Test
     void test5() throws JsonProcessingException {
+        UserDTO userDTO = new UserDTO("Test name", "test pass", User.ROLE.ADMIN);
+        String jsonString = objectMapper.writeValueAsString(userDTO);
+
+        String response = given()
+                .spec(requestSpecification())
+                .body(jsonString)
+                .when().log().all()
+                .post("/api/user/create")
+                .then().log().all()
+                .extract().asString();
+
+        Long createUserId = Long.parseLong(response);
+
         given()
                 .spec(requestSpecification())
-                .when().log().all().delete("api/user/delete/15")
+                .when().log().all().delete("api/user/delete/{id}", createUserId)
                 .then().log().all()
                 .spec(SIMPLE_OK());
     }

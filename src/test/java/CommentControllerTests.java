@@ -2,23 +2,21 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.isa.demo.dto.CommentDTO;
 import ru.isa.demo.dto.TaskDTO;
 import ru.isa.demo.dto.UserDTO;
 import ru.isa.demo.model.Task;
 import ru.isa.demo.model.User;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 import static io.restassured.RestAssured.given;
 import static ru.isa.demo.specifications.RespSpec.SIMPLE_OK;
 import static ru.isa.demo.specifications.RespSpec.requestSpecification;
 
-public class TaskControllerTests {
+public class CommentControllerTests {
 
     ObjectMapper objectMapper = new ObjectMapper();
 
-    @DisplayName("Get task")
+    @DisplayName("Create comment")
     @Test
     void test() throws JsonProcessingException {
         UserDTO userDTO = new UserDTO("Test name GET", "test pass", User.ROLE.ADMIN);
@@ -34,30 +32,16 @@ public class TaskControllerTests {
 
         Long createdUserId = Long.parseLong(userResponse);
 
-        TaskDTO taskDTO = new TaskDTO(Task.Priority.HIGH, Task.Status.IN_IDLE, "Rest test description", "Rest test title", createdUserId);
-        String jsonStringTask = objectMapper.writeValueAsString(taskDTO);
+        CommentDTO commentDTO = new CommentDTO("Test comment GET", createdUserId);
+        String jsonStringTask = objectMapper.writeValueAsString(commentDTO);
 
-
-        String taskResponse = given()
+        given()
                 .spec(requestSpecification())
                 .body(jsonStringTask)
-                .when().log().all().post("/api/task/create")
+                .when().log().all().post("/api/comment/create")
                 .then().log().all()
+                .spec(SIMPLE_OK())
                 .extract().asString();
-
-        Long createdTaskId = Long.parseLong(taskResponse);
-
-        given()
-                .spec(requestSpecification())
-                .when().log().all().get("/api/task/getById/{id}", createdTaskId)
-                .then().log().all()
-                .spec(SIMPLE_OK());
-
-        given()
-                .spec(requestSpecification())
-                .when().log().all()
-                .delete("/api/task/delete/{id}", createdTaskId)
-                .then().log().all();
 
         given()
                 .spec(requestSpecification())
@@ -67,18 +51,67 @@ public class TaskControllerTests {
 
     }
 
-    @DisplayName("Get all task")
+    @DisplayName("Get all comments")
     @Test
-    void test2() {
+    void test1() throws JsonProcessingException {
         given()
                 .spec(requestSpecification())
-                .when().log().all().get("/api/task/getAll")
+                .when().log().all().get("/api/comment/getAll")
                 .then().log().all()
                 .spec(SIMPLE_OK());
+
     }
 
+    @DisplayName("Get all user comments By userId")
+    @Test
+    void test2() throws JsonProcessingException {
+        UserDTO userDTO = new UserDTO("Test name GET", "test pass", User.ROLE.ADMIN);
+        String jsonStringUser = objectMapper.writeValueAsString(userDTO);
 
-    @DisplayName("Post task")
+        String userResponse = given()
+                .spec(requestSpecification())
+                .body(jsonStringUser)
+                .when().log().all()
+                .post("/api/user/create")
+                .then().log().all()
+                .extract().asString();
+
+        Long createdUserId = Long.parseLong(userResponse);
+
+        CommentDTO commentDTO = new CommentDTO("Test comment GET", createdUserId);
+        CommentDTO commentDTO2 = new CommentDTO("Test comment GET 2", createdUserId);
+        String jsonStringTask = objectMapper.writeValueAsString(commentDTO);
+        String jsonStringTask2 = objectMapper.writeValueAsString(commentDTO2);
+
+        given()
+                .spec(requestSpecification())
+                .body(jsonStringTask)
+                .when().log().all().post("/api/comment/create")
+                .then().log().all()
+                .extract().asString();
+
+        given()
+                .spec(requestSpecification())
+                .body(jsonStringTask2)
+                .when().log().all().post("/api/comment/create")
+                .then().log().all()
+                .extract().asString();
+
+        given()
+                .spec(requestSpecification())
+                .when().log().all()
+                .get("api/comment/getComment/{userId}", createdUserId)
+                .then().log().all()
+                .spec(SIMPLE_OK());
+
+        given()
+                .spec(requestSpecification())
+                .when().log().all()
+                .delete("/api/user/delete/{id}", createdUserId)
+                .then().log().all();
+    }
+
+    @DisplayName("Update comment by id")
     @Test
     void test3() throws JsonProcessingException {
         UserDTO userDTO = new UserDTO("Test name GET", "test pass", User.ROLE.ADMIN);
@@ -94,70 +127,23 @@ public class TaskControllerTests {
 
         Long createdUserId = Long.parseLong(userResponse);
 
-
-        TaskDTO taskDTO = new TaskDTO(Task.Priority.HIGH, Task.Status.IN_IDLE, "Rest test description", "Rest test title", createdUserId);
-        String jsonString = objectMapper.writeValueAsString(taskDTO);
-        given()
-                .spec(requestSpecification())
-                .body(jsonString)
-                .when().log().all().post("/api/task/create")
-                .then().log().all()
-                .spec(SIMPLE_OK());
+        CommentDTO commentDTO = new CommentDTO("Test comment GET", createdUserId);
+        String jsonStringTask = objectMapper.writeValueAsString(commentDTO);
 
 
         given()
-                .spec(requestSpecification())
-                .when().log().all()
-                .delete("/api/user/delete/{id}", createdUserId)
-                .then().log().all();
-    }
-
-
-    @DisplayName("Update task")
-    @Test
-    void test4() throws JsonProcessingException {
-        UserDTO userDTO = new UserDTO("Test name UPD", "test pass", User.ROLE.ADMIN);
-        String jsonStringUser = objectMapper.writeValueAsString(userDTO);
-
-        String userResponse = given()
-                .spec(requestSpecification())
-                .body(jsonStringUser)
-                .when().log().all()
-                .post("/api/user/create")
-                .then().log().all()
-                .extract().asString();
-
-        Long createdUserId = Long.parseLong(userResponse);
-
-        TaskDTO taskDTO = new TaskDTO(Task.Priority.HIGH, Task.Status.IN_IDLE, "Rest test description", "Rest test title", createdUserId);
-        String jsonStringTask = objectMapper.writeValueAsString(taskDTO);
-
-
-        String taskResponse = given()
                 .spec(requestSpecification())
                 .body(jsonStringTask)
-                .when().log().all().post("/api/task/create")
+                .when().log().all().post("/api/comment/create")
                 .then().log().all()
                 .extract().asString();
 
-        Long createdTaskId = Long.parseLong(taskResponse);
-
-        given()
-                .param("title", "Test title")
-                .param("description", "Test description")
-                .param("status", "COMPLETED")
-                .param("priority", "MEDIUM")
-                .param("userId", createdUserId)
-                .when()
-                .put("/api/task/update/{id}", createdTaskId)
-                .then().log().all()
-                .spec(SIMPLE_OK());
 
         given()
                 .spec(requestSpecification())
-                .when().log().all()
-                .delete("/api/task/delete/{id}", createdTaskId)
-                .then().log().all();
+                .when().log().all().put("api/user/updateUser/{id}?content=ChangedComment", createdUserId)
+                .then().log().all()
+                .spec(SIMPLE_OK());
 
         given()
                 .spec(requestSpecification())
@@ -167,10 +153,10 @@ public class TaskControllerTests {
 
     }
 
-    @DisplayName("Delete task")
+    @DisplayName("Delete all comments user by userId")
     @Test
-    void test5() throws JsonProcessingException {
-        UserDTO userDTO = new UserDTO("Test name UPD", "test pass", User.ROLE.ADMIN);
+    void test4() throws JsonProcessingException {
+        UserDTO userDTO = new UserDTO("Test name GET", "test pass", User.ROLE.ADMIN);
         String jsonStringUser = objectMapper.writeValueAsString(userDTO);
 
         String userResponse = given()
@@ -182,30 +168,69 @@ public class TaskControllerTests {
                 .extract().asString();
 
         Long createdUserId = Long.parseLong(userResponse);
-        // Создание объекта TaskDTO
-        TaskDTO taskDTO = new TaskDTO(Task.Priority.HIGH, Task.Status.IN_IDLE, "Rest test description", "Rest test title", createdUserId);
-        String jsonString = objectMapper.writeValueAsString(taskDTO);
 
-        // Выполнение POST запроса для создания задачи
-        String response = given()
+        CommentDTO commentDTO = new CommentDTO("Test comment GET", createdUserId);
+        String jsonStringTask = objectMapper.writeValueAsString(commentDTO);
+
+
+        given()
                 .spec(requestSpecification())
-                .body(jsonString)
-                .when().log().all()
-                .post("/api/task/create")
+                .body(jsonStringTask)
+                .when().log().all().post("/api/comment/create")
                 .then().log().all()
-                .spec(SIMPLE_OK()) // Убедитесь, что задача успешно создана
-                .extract().asString(); // Извлечение ответа как строки
+                .extract().asString();
 
-        // Предположим, что ID задачи находится в ответе как текст
-        Integer createdTaskId = Integer.parseInt(response); // Преобразование строки в Integer, если ID возвращается как текст
 
-        // Выполнение DELETE запроса для удаления задачи
         given()
                 .spec(requestSpecification())
                 .when().log().all()
-                .delete("/api/task/delete/{id}", createdTaskId)
+                .delete("api/comment/deleteByUserId/{userId}", createdUserId)
+                .then().log().all();
+
+        given()
+                .spec(requestSpecification())
+                .when().log().all()
+                .delete("/api/user/delete/{id}", createdUserId)
+                .then().log().all();
+
+    }
+
+    @DisplayName("Delete comment by Id")
+    @Test
+    void test5() throws JsonProcessingException {
+        UserDTO userDTO = new UserDTO("Test name GET", "test pass", User.ROLE.ADMIN);
+        String jsonStringUser = objectMapper.writeValueAsString(userDTO);
+
+        String userResponse = given()
+                .spec(requestSpecification())
+                .body(jsonStringUser)
+                .when().log().all()
+                .post("/api/user/create")
                 .then().log().all()
-                .spec(SIMPLE_OK()); // Проверка успешного удаления
+                .extract().asString();
+
+        Long createdUserId = Long.parseLong(userResponse);
+
+        CommentDTO commentDTO = new CommentDTO("Test comment GET", createdUserId);
+        String jsonStringTask = objectMapper.writeValueAsString(commentDTO);
+
+
+        String commentResponse = given()
+                .spec(requestSpecification())
+                .body(jsonStringTask)
+                .when().log().all().post("/api/comment/create")
+                .then().log().all()
+                .extract().asString();
+
+        Long commentId = Long.parseLong(commentResponse);
+
+
+        given()
+                .spec(requestSpecification())
+                .when().log().all()
+                .delete("/api/comment/deleteById/{Id}", commentId)
+                .then().log().all()
+                .spec(SIMPLE_OK());
 
         given()
                 .spec(requestSpecification())
